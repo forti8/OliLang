@@ -1,0 +1,29 @@
+# teste soma de numeros inteiros
+$soma_inteiro = 1 + 1
+
+# teste de soma de numeros de ponto flutuante
+$soma_float = 1.4 + 1.4
+
+# teste de divisão de numeros inteiros
+$divisao_inteiros = 5 / 2
+
+# teste de divisão de numeros de ponto flutuante
+$divisao_floats = 5.0 / 2
+
+# saida de dados
+print()
+print("Soma de inteiros: ")
+print(soma_inteiro)
+
+print()
+print("Soma de floats: ")
+print(soma_float)
+
+print()
+print("Teste de divisao de inteiros: ")
+print(divisao_inteiros)
+
+print()
+print("Teste de divisao com um float: ")
+print(divisao_floats)
+print()
