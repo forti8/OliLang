@@ -12,6 +12,7 @@ std::vector<Token> Lexer::Tokenize(std::string& line)
 
     size_t i = 0;
     int col = 1;
+
     while (i < line.size())
     {
         if (line[i] == '#') break;
@@ -23,46 +24,23 @@ std::vector<Token> Lexer::Tokenize(std::string& line)
             continue;
         }
 
-        else if (isalpha(line[i]) || line[i] == '_')
-        {
+        else if (isalpha(line[i]) || line[i] == '_') {
+
             std::string word;
-            while (i < line.size() && ( isalnum(line[i]) || line[i] == '_'))
-            {
+            while (i < line.size() && ( isalnum(line[i]) || line[i] == '_')) {
                 word.push_back(line[i++]);
                 col++;
             }
 
-            if (word == "print")
-            {
+            std::string CommandControlString = "print scan if else";
+            size_t CommandPosition = CommandControlString.find(word);
+
+            if (CommandPosition != std::string::npos) {
                 tokens.push_back({NodeType::command, word, col});
                 Previous = {NodeType::command, word, col};
             }
 
-            else if (word == "scan")
-            {
-                tokens.push_back({NodeType::command, word, col});
-                Previous = {NodeType::command, word, col};
-            }
-
-            else if (word == "if")
-            {
-                tokens.push_back({NodeType::command, word, col});
-                Previous = {NodeType::command, word, col};
-            }
-
-            else if (word == "else")
-            {
-                tokens.push_back({NodeType::command, word, col});
-                Previous = {NodeType::command, word, col};
-            }
-
-            else if (Previous.Type == NodeType::varset)
-            {
-                tokens.push_back({NodeType::varname, word, col});
-                Previous = {NodeType::varname, word, col};
-            }
-            else
-            {
+            else {
                 tokens.push_back({NodeType::ident, word, col});
                 Previous = {NodeType::ident, word, col};
             }
@@ -70,11 +48,19 @@ std::vector<Token> Lexer::Tokenize(std::string& line)
             continue;
         }
 
-        else if (line[i] == '$')
-        {
-            tokens.push_back({NodeType::varset, "$", col});
-            Previous = {NodeType::varset, "$", col};
+       else if (line[i] == '$') {
+            i++;
+
+            std::string varname;
+            while (i < line.size() && (isalnum(line[i]) || line[i] == '_')) {
+                varname.push_back(line[i++]);
+                col++;
+            }
+            
+            tokens.push_back({NodeType::varset, varname, col});
+            Previous = {NodeType::varset, varname, col};
         }
+
 
         else if (line[i] == '(')
         {
@@ -86,6 +72,18 @@ std::vector<Token> Lexer::Tokenize(std::string& line)
         {
             tokens.push_back({NodeType::parclose, ")", col});
             Previous = {NodeType::parclose, ")", col};
+        }
+
+        else if (line[i] == '{')
+        {
+            tokens.push_back({NodeType::curlyopen, "{", col});
+            Previous = {NodeType::curlyopen, "{", col};
+        }
+
+        else if (line[i] == '}')
+        {
+            tokens.push_back({NodeType::curlyclose, "}", col});
+            Previous = {NodeType::curlyclose, "}", col};
         }
 
         else if (line[i] == '"')
@@ -103,6 +101,19 @@ std::vector<Token> Lexer::Tokenize(std::string& line)
             tokens.push_back({NodeType::string, str, col});
             Previous = {NodeType::string, str, col};
             continue;
+        }
+
+        else if (line[i] == '!')
+        {
+            if (line[++i] == '=') {
+                tokens.push_back({NodeType::diff, "!=", col});
+                Previous = {NodeType::diff, "!=", col};
+                i++;
+            }
+
+            else {
+                i--;
+            }
         }
 
         else if (line[i] == '=')

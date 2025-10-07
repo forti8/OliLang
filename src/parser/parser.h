@@ -8,7 +8,7 @@
     class Parser
     {
         public:
-            AstNode* ParseLine (std::vector<Token> Tokens, int currentLine);
+            AstNode* ParseLine (std::vector<Token> Tokens, int currentLine, int& i);
             AstNode* ParseExpression (std::vector<Token>, int currentLine, int& i);
             AstNode* ParseAssignment (std::vector<Token>, int currentLine, int& i);
             AstNode* ParseCondition (std::vector<Token> Tokens, int currentLine, int& i);

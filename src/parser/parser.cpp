@@ -6,12 +6,11 @@
 #include <iostream>
 
 void reportError(std::string msg, int lin, int col) {
-    std::cerr << "\nError: " << msg;
-    std::cerr << " (" << lin << ";" << col << ")\n";
+    std::cerr << "\033[0;31m\nError: " << msg;
+    std::cerr << " (" << lin << ";" << col << ")\n\033[0m\a";
 }
 
-AstNode* Parser::ParseLine(std::vector<Token> Tokens, int currentLine) {
-    int i = 0;
+AstNode* Parser::ParseLine(std::vector<Token> Tokens, int currentLine, int& i) {
     if (Tokens.empty()) return nullptr;
 
     if (Tokens[i].Type == NodeType::command && Tokens[i].Value == "print") {
@@ -96,13 +95,30 @@ AstNode* Parser::ParseLine(std::vector<Token> Tokens, int currentLine) {
             AstNode* ifBlock = new AstNode(NodeType::codeBlock, "block");
 
             if (condition == nullptr)
-                reportError("Expected codition");
+                reportError("Expected condition", currentLine, Tokens[i].col);
 
             if (i >= Tokens.size() || Tokens[i].Type != NodeType::parclose)
                 reportError("Expected ')' to close", currentLine, Tokens[i].col);
 
-            ifstatment->Children.push_back(condition); 
+            if (i + 1 >= Tokens.size() || Tokens[++i].Type != NodeType::curlyopen)
+                reportError("Expected '{' to open", currentLine, Tokens[i].col);
+                
+            while (i < Tokens.size() && Tokens[i].Type != NodeType::curlyclose) {
+                AstNode* lineNode = ParseLine(Tokens, currentLine, i);
+                if (lineNode != nullptr) {
+                    ifBlock->Children.push_back(lineNode);
+                }
+
+                else {
+                    i++;
+                }
+            }
             
+            i++;
+
+
+            ifstatment->Children.push_back(condition); 
+            ifstatment->Children.push_back(ifBlock);
 
             return ifstatment;
         }
@@ -116,8 +132,7 @@ AstNode* Parser::ParseLine(std::vector<Token> Tokens, int currentLine) {
 }
 
 AstNode* Parser::ParseAssignment(std::vector<Token> Tokens, int currentLine, int& i) {
-    i++;
-    if (i >= Tokens.size() || Tokens[i].Type != NodeType::varname)
+    if (i >= Tokens.size() || Tokens[i].Type != NodeType::varset)
         reportError("Expected variable name", currentLine, Tokens[i].col);
 
     AstNode* varset = new AstNode(NodeType::varset, Tokens[i].Value);
@@ -305,128 +320,41 @@ AstNode* Parser::ParseExpression(std::vector<Token> Tokens, int currentLine, int
     return left;
 }
 
-AstNode* Parser::ParseCondition (std::vector<Token> Tokens, int currentLine, int& i)
-{
+AstNode* Parser::ParseCondition(std::vector<Token> Tokens, int currentLine, int& i) {
     AstNode* left;
-    if (i >= Tokens.size())
-        reportError("Expected expression", currentLine, 0);
 
-    switch (Tokens[i].Type)
-    {
-        case NodeType::float_OLI:
-            left = new AstNode(NodeType::float_OLI, Tokens[i++].Value);
-        break;
-        
-        case NodeType::integer_OLI:
-            left = new AstNode(NodeType::integer_OLI, Tokens[i++].Value);
-        break;
-
-        case NodeType::string:
-            left = new AstNode(NodeType::string, Tokens[i++].Value);
-        break;
-
-        case NodeType::ident:
-            left = new AstNode(NodeType::ident, Tokens[i++].Value);
-        break;
-
-        default:
-            reportError("Invalid left-hand expression", currentLine, Tokens[i].col);
-        break;
+    switch (Tokens[i].Type) {
+        case NodeType::float_OLI: left = new AstNode(NodeType::float_OLI, Tokens[i++].Value); break;
+        case NodeType::integer_OLI: left = new AstNode(NodeType::integer_OLI, Tokens[i++].Value); break;
+        case NodeType::string: left = new AstNode(NodeType::string, Tokens[i++].Value); break;
+        case NodeType::ident: left = new AstNode(NodeType::ident, Tokens[i++].Value); break;
+        default: reportError("Invalid left-hand expression", currentLine, Tokens[i].col); break;
     }
+
+    if (i >= Tokens.size()) return nullptr;
+
+    NodeType opType = Tokens[i].Type;
+    i++;
 
     AstNode* right;
-    if (i + 1 < Tokens.size() && Tokens[i++].Value == NodeType::equal)
-    {
-        switch (Tokens[i].Type)
-        {
-            case NodeType::float_OLI:
-                right = new AstNode(NodeType::float_OLI, Tokens[i++].Value);
-            break;
-            
-            case NodeType::integer_OLI:
-                right = new AstNode(NodeType::integer_OLI, Tokens[i++].Value);
-            break;
-
-            case NodeType::string:
-                right = new AstNode(NodeType::string, Tokens[i++].Value);
-            break;
-
-            case NodeType::ident:
-                right = new AstNode(NodeType::ident, Tokens[i++].Value);
-            break;
-
-            default:
-                reportError("Invalid left-hand expression", currentLine, Tokens[i].col);
-            break;
-        }
-
-        AstNode* equal = new AstNode(NodeType::equal, "==");
-        equal->Children.push_back(left);
-        equal->Children.push_back(right);
-        return equal;
+    switch (Tokens[i].Type) {
+        case NodeType::float_OLI: right = new AstNode(NodeType::float_OLI, Tokens[i++].Value); break;
+        case NodeType::integer_OLI: right = new AstNode(NodeType::integer_OLI, Tokens[i++].Value); break;
+        case NodeType::string: right = new AstNode(NodeType::string, Tokens[i++].Value); break;
+        case NodeType::ident: right = new AstNode(NodeType::ident, Tokens[i++].Value); break;
+        default: reportError("Invalid right-hand expression", currentLine, Tokens[i].col); break;
     }
 
-    else if (i + 1 < Tokens.size() && Tokens[i++].Value == NodeType::less)
-    {
-         switch (Tokens[i].Type)
-        {
-            case NodeType::float_OLI:
-                right = new AstNode(NodeType::float_OLI, Tokens[i++].Value);
-            break;
-            
-            case NodeType::integer_OLI:
-                right = new AstNode(NodeType::integer_OLI, Tokens[i++].Value);
-            break;
-
-            case NodeType::string:
-                right = new AstNode(NodeType::string, Tokens[i++].Value);
-            break;
-
-            case NodeType::ident:
-                right = new AstNode(NodeType::ident, Tokens[i++].Value);
-            break;
-
-            default:
-                reportError("Invalid left-hand expression", currentLine, Tokens[i].col);
-            break;
-        }
-
-        AstNode* less = new AstNode(NodeType::less, "<");
-        less->Children.push_back(left);
-        less->Children.push_back(right);
-        return less;
+    AstNode* cond = nullptr;
+    switch (opType) {
+        case NodeType::equal: cond = new AstNode(NodeType::equal, "=="); break;
+        case NodeType::diff: cond = new AstNode(NodeType::diff, "!="); break;
+        case NodeType::less: cond = new AstNode(NodeType::less, "<"); break;
+        case NodeType::more: cond = new AstNode(NodeType::more, ">"); break;
+        default: reportError("Unknown operator in condition", currentLine, Tokens[i].col); break;
     }
 
-    else if (i + 1 < Tokens.size() && Tokens[i++].Value == NodeType::more)
-    {
-        switch (Tokens[i].Type)
-        {
-            case NodeType::float_OLI:
-                right = new AstNode(NodeType::float_OLI, Tokens[i++].Value);
-            break;
-            
-            case NodeType::integer_OLI:
-                right = new AstNode(NodeType::integer_OLI, Tokens[i++].Value);
-            break;
-
-            case NodeType::string:
-                right = new AstNode(NodeType::string, Tokens[i++].Value);
-            break;
-
-            case NodeType::ident:
-                right = new AstNode(NodeType::ident, Tokens[i++].Value);
-            break;
-
-            default:
-                reportError("Invalid right-hand expression", currentLine, Tokens[i].col);
-            break;
-        }
-
-        AstNode* more = new AstNode(NodeType::more, ">");
-        more->Children.push_back(left);
-        more->Children.push_back(right);
-        return more;
-    }
-
-    return nullptr;
+    cond->Children.push_back(left);
+    cond->Children.push_back(right);
+    return cond;
 }

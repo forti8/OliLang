@@ -1,43 +1,96 @@
+// libs
 #include <iostream>
 #include <string>
 #include <fstream>
+
+// includes language analysis libraries
 #include "src/lexer/lexer.h"
 #include "src/parser/parser.h"
 #include "src/parser/astnode.h"
 #include "src/interpreter/interpreter.h"
 
-int main(int argc, char const *argv[])
-{
-    std::string arqName;
-    std::string lin;
-    
-    std::cout << "set the path of the .oliva file (default is current folder): ";
-    std::cin >> arqName;
-    
-    Lexer OlivaLexer;
-    Parser OlivaParser;
-    Interpreter OlivaInterpreter;
-    int currentLine = 0;
+void defineConsoleColor (int c, std::string txt) {
+    std::cout << "\033[0;" << c << "m" << txt << "\033[0m";
+    return;
+}
 
-    std::vector <Token> tokensLine;
-    AstNode* astLine;
+// main function
+int main(int argc, char const *argv[]) {
 
-    std::ifstream file (arqName);
+    // argc defines how many arguments were used by default 1
+    if (argc > 1) {
 
-    if (!file.is_open())
-    {
-        std::cerr << "Error opening \"" << arqName << "\"";
-        exit(1);
+        // prefix of each program argument/parameter (argv). It is not necessary but it is convenient
+        std::string prefix = "--";
+        
+        // run command
+        if (argv[1] == prefix + "run") {
+
+            // variables for file access
+            std::string arqName;
+            std::string lin;
+            
+            // ensures that the argument referring to the path of the .oli file is set
+            if (argc > 2) {
+
+                // passes the value of argv which is the absolute path of the file to be read
+                arqName = argv[2];
+
+                // each language analysis process is a class
+                // being stored in a variable to be used for its functions
+                Lexer OlivaLexer;
+                Parser OlivaParser;
+                Interpreter OlivaInterpreter;
+
+                // current line to report errors
+                int currentLine = 0;
+
+                // just for the parser to separate correctly
+                int i = 0;
+
+                // stores the return of each step to correctly follow the interpretation flow
+                std::vector <Token> tokens;
+                AstNode* ast;
+
+                // just "finds" the file by its path
+                std::ifstream file (arqName);
+
+                // informs if opening error occurs
+                if (!file.is_open()) {
+                    defineConsoleColor(31, "Error opening \"" + arqName + "\"\a");
+                    exit(1);
+                }
+
+                // file read loop
+                while (getline(file, lin)) {
+                    tokens = OlivaLexer.Tokenize(lin);
+                    ast = OlivaParser.ParseLine(tokens, ++currentLine, i);
+                    OlivaInterpreter.interpretLine(ast, currentLine);
+                };
+
+                // closes the file after interpretation
+                file.close();
+            }
+
+            else {
+                defineConsoleColor(31, "the file path was not declared\n\a");
+            }
+        }
+
+        // --version
+        else if (argv[1] == prefix + "version") {
+            defineConsoleColor(33, "Oliva beta\n");
+        }
+
+        // --help
+        else if (argv[1] == prefix + "help") {
+            defineConsoleColor(33, "List of available commands\n");
+            defineConsoleColor(32, "--run executes an oli file\n");
+            defineConsoleColor(32, "--version displays the language version being used\n");
+            defineConsoleColor(32, "--help displays a list of all available commands\n");
+        }
     }
 
-    while (getline(file, lin))
-    {
-        tokensLine = OlivaLexer.Tokenize(lin);
-        astLine = OlivaParser.ParseLine(tokensLine, ++currentLine);
-        OlivaInterpreter.interpretLine(astLine, currentLine);
-    };
-    
-    file.close();
     system("pause");
     return 0;
 }
