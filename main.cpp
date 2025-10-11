@@ -45,9 +45,6 @@ int main(int argc, char const *argv[]) {
                 // current line to report errors
                 int currentLine = 0;
 
-                // just for the parser to separate correctly
-                int i = 0;
-
                 // stores the return of each step to correctly follow the interpretation flow
                 std::vector <Token> tokens;
                 AstNode* ast;
@@ -63,6 +60,10 @@ int main(int argc, char const *argv[]) {
 
                 // file read loop
                 while (getline(file, lin)) {
+                    
+                    // just for the parser to separate correctly
+                    int i = 0;
+                    
                     tokens = OlivaLexer.Tokenize(lin);
                     ast = OlivaParser.ParseLine(tokens, ++currentLine, i);
                     OlivaInterpreter.interpretLine(ast, currentLine);
@@ -79,15 +80,17 @@ int main(int argc, char const *argv[]) {
 
         // --version
         else if (argv[1] == prefix + "version") {
-            defineConsoleColor(33, "Oliva beta\n");
+            defineConsoleColor(36, "Oliva version 0.0.0.1 (Earendel)\n");
+            defineConsoleColor(36, "Oliva Parser version 0.0.0.1\n");
+            defineConsoleColor(36, "Oliva Runtime version 0.0.0.1\n");
         }
 
         // --help
         else if (argv[1] == prefix + "help") {
-            defineConsoleColor(33, "List of available commands\n");
-            defineConsoleColor(32, "--run executes an oli file\n");
-            defineConsoleColor(32, "--version displays the language version being used\n");
-            defineConsoleColor(32, "--help displays a list of all available commands\n");
+            defineConsoleColor(37, "List of available commands\n");
+            defineConsoleColor(37, "--run executes an oli file\n");
+            defineConsoleColor(37, "--version displays the language version being used\n");
+            defineConsoleColor(37, "--help displays a list of all available commands\n");
         }
     }
 

@@ -86,10 +86,15 @@ void Interpreter::interpretLine(AstNode* node, int ln) {
         
         // ifcase
         else if (node->Value == "if") {
+
+            // ast arguments of if
             AstNode* arg = node->Children[0];
             bool condictionResult = Interpreter::condition(arg);
 
+            // interprets each line within the scope
             if (condictionResult) {
+
+                // for each n in node->Children[1]->Children
                 for (auto n : node->Children[1]->Children) {
                     Interpreter::interpretLine(n, ln);
                 };
@@ -98,10 +103,11 @@ void Interpreter::interpretLine(AstNode* node, int ln) {
     }
     
 
+    
     else if (node->Type == NodeType::varset) {
         AstNode* valueNode = node->Children[0];
-        
-        variables[node->Value] = evalue(valueNode);
+        std::string val = evalue(valueNode);
+        variables[node->Value] = val;
     }
 }
 
@@ -199,7 +205,7 @@ std::string Interpreter::evalue(AstNode* node) {
             // integer result variable
             int result = 0;
 
-            // opartion switch case
+            // operation switch case
             switch (node->Type) {
                 case NodeType::add: result = left + right; break;
                 case NodeType::sub: result = left - right; break;
@@ -217,7 +223,7 @@ std::string Interpreter::evalue(AstNode* node) {
     }
 
     // null STRING
-    return "\0";
+    return "";
 }
 
 
@@ -240,10 +246,48 @@ bool Interpreter::condition(AstNode* node) {
             bool leftIsAnNumber = (left->Type == NodeType::float_OLI || left->Type  == NodeType::integer_OLI);
             bool rightIsAnNumber = (right->Type == NodeType::float_OLI || right->Type == NodeType::integer_OLI);
 
+            // reference case
+            bool leftIsAnVariable = (left->Type == NodeType::ident);
+            bool rightIsAnVariable = (right->Type == NodeType::ident);
+
             // case number condition
             bool numberCondition = leftIsAnNumber && rightIsAnNumber;
             if (numberCondition) {
                 res = std::stof(left->Value) == std::stof(right->Value);
+            }
+
+            else if (leftIsAnVariable || rightIsAnVariable) {
+
+                std::string value1 = left->Value;
+                std::string value2 = right->Value;
+
+                if (leftIsAnVariable) {
+
+                    // variabled defined
+                    if (variables.find(left->Value) != variables.end()) {
+                        value1 = variables[left->Value];
+                    }
+
+                    // variable not defined 
+                    else {
+                        std::cerr << "\nError: Variable '" << left->Value << "' not declared\n";
+                    }
+                }
+
+                if (rightIsAnVariable) {
+
+                    // variabled defined
+                    if (variables.find(right->Value) != variables.end()) {
+                        value2 = variables[right->Value];
+                    }
+
+                    // variable not defined 
+                    else {
+                        std::cerr << "\nError: Variable '" << right->Value << "' not declared\n";
+                    }
+                }
+
+                res = std::stof(value1) == std::stof(value2);
             }
 
             // other
@@ -256,9 +300,14 @@ bool Interpreter::condition(AstNode* node) {
 
         // like anything (no same type)
         case NodeType::diff: {
+
             // number case 
             bool leftIsAnNumber = (left->Type == NodeType::float_OLI || left->Type  == NodeType::integer_OLI);
             bool rightIsAnNumber = (right->Type == NodeType::float_OLI || right->Type == NodeType::integer_OLI);
+
+            // reference case
+            bool leftIsAnVariable = (left->Type == NodeType::ident);
+            bool rightIsAnVariable = (right->Type == NodeType::ident);
 
             // case number condition
             bool numberCondition = leftIsAnNumber && rightIsAnNumber;
@@ -266,6 +315,39 @@ bool Interpreter::condition(AstNode* node) {
                 res = std::stof(left->Value) != std::stof(right->Value);
             }
 
+            else if (leftIsAnVariable || rightIsAnVariable) {
+
+                std::string value1 = left->Value;
+                std::string value2 = right->Value;
+
+                if (leftIsAnVariable) {
+
+                    // variabled defined
+                    if (variables.find(left->Value) != variables.end()) {
+                        value1 = variables[left->Value];
+                    }
+
+                    // variable not defined 
+                    else {
+                        std::cerr << "\nError: Variable '" << left->Value << "' not declared\n";
+                    }
+                }
+
+                 if (rightIsAnVariable) {
+
+                    // variabled defined
+                    if (variables.find(right->Value) != variables.end()) {
+                        value2 = variables[right->Value];
+                    }
+
+                    // variable not defined 
+                    else {
+                        std::cerr << "\nError: Variable '" << right->Value << "' not declared\n";
+                    }
+                }
+
+                res = std::stof(value1) != std::stof(value2);
+            }
             
             // other
             else {

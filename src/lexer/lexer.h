@@ -6,15 +6,13 @@
 #ifndef OLI_LEXIC
 #define OLI_LEXIC
 
-struct Token
-{
+struct Token {
     NodeType Type;
     std::string Value;
     int col;
 };
 
-class Lexer
-{
+class Lexer {
     public:
         std::vector<Token> Tokenize (std::string& Line);
 };

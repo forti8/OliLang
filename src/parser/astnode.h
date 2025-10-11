@@ -13,34 +13,34 @@
 enum NodeType
 {
     // calc
-    add,
-    sub,
-    div_OLI,
-    mul,
+    add, // 0,
+    sub, // 1,
+    div_OLI, // 2,
+    mul, // 3,
 
     // condition
-    equal,
-    less,
-    more,
-    condition,
+    equal, // 4,
+    less, // 5,
+    more, // 6,
+    condition, // 7,
     
-    command,
-    assign,
-    codeBlock,
+    command, // 8,
+    assign, // 9,
+    codeBlock, // 10,
 
-    string,
-    integer_OLI,
-    float_OLI,
+    string, // 11,
+    integer_OLI, // 12,
+    float_OLI, // 13,
 
-    ident,
-    varset,
-    varname,
-    paropen,
-    curlyopen,
-    curlyclose,
-    parclose,
-    atrib,
-    diff,
+    ident, // 14,
+    varset, // 15,
+    varname, // 16,
+    paropen, // 17,
+    curlyopen, // 18,
+    curlyclose, // 19,
+    parclose, // 20,
+    atrib, // 21,
+    diff // 22,
 };
 
 // primitive astnode struct

@@ -24,27 +24,11 @@ AstNode* Parser::ParseLine(std::vector<Token> Tokens, int currentLine, int& i) {
             switch (Tokens[i].Type)
             {
                 case NodeType::string:
-                    call->Children.push_back(new AstNode(NodeType::string, Tokens[i].Value));
-                    return call;
-                break;
-                
                 case NodeType::float_OLI:
-                    call->Children.push_back(new AstNode(NodeType::float_OLI, Tokens[i].Value));
-                    return call;
-                break;
-
                 case NodeType::integer_OLI:
-                    call->Children.push_back(new AstNode(NodeType::integer_OLI, Tokens[i].Value));
-                    return call;
-                break;
-
                 case NodeType::ident:
-                    call->Children.push_back(new AstNode(NodeType::ident, Tokens[i].Value));
-                    return call;
-                break;
-
-                case NodeType::parclose:
-                    call->Children.push_back(new AstNode(NodeType::string, "\n"));
+                    call->Children.push_back(new AstNode(Tokens[i].Type, Tokens[i].Value));
+                    i++;
                     return call;
                 break;
                 
@@ -132,7 +116,7 @@ AstNode* Parser::ParseLine(std::vector<Token> Tokens, int currentLine, int& i) {
 }
 
 AstNode* Parser::ParseAssignment(std::vector<Token> Tokens, int currentLine, int& i) {
-    if (i >= Tokens.size() || Tokens[i].Type != NodeType::varset)
+    if (i >= Tokens.size() || Tokens[i].Value == "")
         reportError("Expected variable name", currentLine, Tokens[i].col);
 
     AstNode* varset = new AstNode(NodeType::varset, Tokens[i].Value);
@@ -144,11 +128,12 @@ AstNode* Parser::ParseAssignment(std::vector<Token> Tokens, int currentLine, int
     i++;
     AstNode* expr = ParseExpression(Tokens, currentLine, i);
     varset->Children.push_back(expr);
+
     return varset;
 }
 
 AstNode* Parser::ParseExpression(std::vector<Token> Tokens, int currentLine, int& i) {
-    if (i >= Tokens.size())
+    if (i>= Tokens.size())
         reportError("Expected expression", currentLine, 0);
 
     AstNode* left;

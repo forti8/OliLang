@@ -1,1 +1,11 @@
-if (1 != 2 ) {print("verdade") print()}
+$numero1 = 1
+$numero2 = 2
+
+print("digite o numero 1: ")
+scan(numero1)
+
+print("digite o numero 2: ")
+scan(numero2)
+
+if (numero1 == numero2) { print("os numeros sao iguais") }
+if (numero1 != numero2) { print("os numeros sao diferentes") }
